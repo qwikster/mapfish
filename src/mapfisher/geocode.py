@@ -79,3 +79,21 @@ def geocode_location(location):
         pass
     
     return None, None # user doopid
+
+def suggest_locations(text):
+    if not text:
+        return []
+    
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {"q": text, "format": "json", "limit": "1"}
+    headers = {"User-Agent": "mapfisher/1.0"}
+    
+    try:
+        response = requests.get(url, params = params, headers = headers)
+        if response.status_code == 200:
+            data = response.json()
+            return [item["display_name"] for item in data]
+        
+    except Exception:
+        pass
+    return []
