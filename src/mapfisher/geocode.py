@@ -112,7 +112,7 @@ def suggest_locations(text):
         return []
     
     url = "https://nominatim.openstreetmap.org/search"
-    params = {"q": text, "format": "json", "limit": "1"}
+    params = {"q": text, "format": "json", "limit": "5"}
     headers = {"User-Agent": "mapfisher/1.0"}
     
     try:

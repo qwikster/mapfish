@@ -2,7 +2,7 @@ import sys
 import shutil
 import json
 from mapfisher.input import read_key
-from mapfisher.geocode import suggest_locations, geocode_location
+from mapfisher.geocode import geocode_location, get_current_suggestions, trigger_async_search
 
 CONFIG_FILE = "config.json"
 
@@ -44,28 +44,42 @@ class SettingsUI:
             ""
         ]
         
-        for i, opt in enumerate(self.options[:-1]):
-            highlight = COLOR_HIGHLIGHT if i == self.current_option else ""
+        for i, opt in enumerate(self.options[:]):
+            highlight = COLOR_HIGHLIGHT if i == self.current_option and not self.search_mode else ""
             if opt["states"]:
                 state_idx = opt["states"].index(opt["value"])
-                states_str = " | ".join([COLOR_SELECTED + s + COLOR_RESET if j == state_idx else s for j, s in enumerate(opt["states"])])
-                lines.append(f"{highlight}{opt["label"]}: {states_str}{COLOR_RESET}")
+                states_str = " | ".join(
+                    COLOR_SELECTED + s + COLOR_RESET if j == state_idx else s
+                    for j, s in enumerate(opt["states"])
+                )
+                lines.append(f"{highlight}  {opt["label"]}: {states_str}{COLOR_RESET}")
             else:
-                lines.append(f"{highlight}{opt["label"]}{COLOR_RESET}")
+                lines.append(f"{highlight}  {opt["label"]}{COLOR_RESET}")
         
         draw_box(lines)
         
         if self.search_mode:
-            term_width, _ = get_terminal_size()
-            prompt_y = BOX_HEIGHT // 2 + len(lines) // 2 + 1
-            prompt_x = (term_width - BOX_WIDTH) // 2 + 1
-            sys.stdout.write(f"\x1b[{prompt_y};{prompt_x}H")
-            sys.stdout.write(f"{COLOR_PROMPT}>... {self.search_input}{COLOR_RESET}")
+            term_w, term_h = get_terminal_size()
+            box_x = (term_w - BOX_WIDTH) // 2
+            box_y = (term_h - BOX_HEIGHT) // 2
             
-            for i, sugg in enumerate(self.suggestions):
-                sugg_highlight = COLOR_SELECTED if i == self.selected_sugg else ""
-                sys.stdout.write(f"\x1b[{prompt_y + i + 1};{prompt_x}H{sugg_highlight}{sugg[:BOX_WIDTH - 2]}{COLOR_RESET}")
+            prompt_y = box_y + 7
+            sugg_start_y = prompt_y + 2
             
+            prompt = f"{COLOR_PROMPT}Coordinates >... {self.search_input}{COLOR_RESET}"
+            sys.stdout.write(f"\x1b[{prompt_y};{box_x + 3}H{prompt.ljust(BOX_WIDTH - 6)}")
+            
+            current_suggs = get_current_suggestions()
+            for i in range(5):
+                y = sugg_start_y + i
+                sys.stdout.write(f"\x1b[{y};{box_x + 3}H{' ' * (BOX_WIDTH - 6)}")
+                if i < len(current_suggs):
+                    text = current_suggs[i][:BOX_WIDTH - 8]
+                    hl = COLOR_SELECTED if i == self.selected_sugg else ""
+                    sys.stdout.write(f"\x1b[{y};{box_x + 3}H  {hl}{text}{COLOR_RESET}")
+                
+            cursor_x = box_x + 3 + len("Coordinates >... ") + len(self.search_input)
+            sys.stdout.write(f"\x1b[{prompt_y};{cursor_x}H")
             sys.stdout.flush()
                 
     def run(self):
@@ -95,29 +109,28 @@ class SettingsUI:
                 if key == "esc":
                     self.search_mode  = False
                     self.search_input = ""
-                    self.suggestions = []
+                    self.selected_sugg = 0
                 elif key == "backspace":
-                    if self.search_input:
-                        self.search_input = self.search_input[:-1]
-                        self.update_suggestions()
-                elif key in ("up"):
+                    self.search_input = self.search_input[:-1]
+                    trigger_async_search(self.search_input)
+                elif key == "up":
                     self.selected_sugg = max(0, self.selected_sugg - 1)
-                elif key in ("down"):
-                    self.selected_sugg = min(len(self.suggestions) - 1, self.selected_sugg + 1)
-                elif key.isalnum() or key in (" ", ",", ".", "-", "+", "'", '"', "°"):
+                elif key == "down":
+                    current = get_current_suggestions()
+                    self.selected_sugg = min(len(current) - 1, self.selected_sugg + 1)
+                elif len(key) == 1 and (key.isprintable() or key in " °'\" "):
                     self.search_input += key
-                    self.update_suggestions()
+                    trigger_async_search(self.search_input)
                 elif key == "enter":
-                    if self.suggestions and self.selected_sugg < len(self.suggestions):
-                        location = self.suggestions[self.selected_sugg]
-                    else:
-                        location = self.search_input
-                    lat, lon = geocode_location(location)
+                    final = (get_current_suggestions()[self.selected_sugg]
+                             if get_current_suggestions() and self.selected_sugg < len(get_current_suggestions())
+                             else self.search_input)
+                    lat, lon = geocode_location(final)
                     if lat and lon:
+                        self.search_mode = False
+                        self.search_input = ""
+                        self.selected_sugg = 0
                         return (lat, lon)
-                    else:
-                        # error handling here?
-                        pass
                     
             self.draw_ui()
     
@@ -129,10 +142,6 @@ class SettingsUI:
             opt["value"] = opt["states"][new_idx]
             self.config[opt["name"]] = opt["value"]
             save_config(self.config) # noqa - from MAIN.PY
-        
-    def update_suggestions(self):
-        self.suggestions = suggest_locations(self.search_input)
-        self.selected_sugg = 0
         
 def draw_box(lines):
     clear()
