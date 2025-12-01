@@ -118,6 +118,12 @@ class SettingsUI:
     
     def toggle_state(self, direction):
         opt = self.options[self.current_option]
+        if opt["states"]:
+            idx = opt["states"].index(opt["value"])
+            new_idx = (idx + direction) % len(opt["states"])
+            opt["value"] = opt["states"][new_idx]
+            self.config[opt["name"]] = opt["value"]
+            save_config(self.config) # noqa - from MAIN.PY
         
     def update_suggestions(self):
         self.suggestions = suggest_locations(self.search_input)
@@ -125,4 +131,18 @@ class SettingsUI:
         
 def draw_box(lines):
     term_width, term_height = get_terminal_size()
+    start_x = (term_width - BOX_WIDTH) // 2
+    start_y = (term_height - BOX_HEIGHT) // 2
     
+    sys.stdout.write(f"\x1b[{start_y};{start_x}H")
+    
+    sys.stdout.write("╭" + "─" * (BOX_WIDTH - 2) + "╮\n")
+    
+    for line in lines:
+        padded = line.center(BOX_WIDTH - 2)
+        sys.stdout.write("│" + padded + "│")
+        
+    for _ in range(BOX_HEIGHT - 2 - len(lines)):
+        sys.stdout.write("│" + " " * (BOX_WIDTH - 2) + "│\n")
+    
+    sys.stdout.write("╰" + "─" * (BOX_WIDTH - 2) + "╯\n")
