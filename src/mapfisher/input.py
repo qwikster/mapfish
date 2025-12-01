@@ -41,6 +41,7 @@ def read_key():
             return ch.decode("utf-8").lower()
         else:
             return ch.decode("utf-8", errors = "ignore")
+        
     else:
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
@@ -65,5 +66,6 @@ def read_key():
                 return KEY_BACKSPACE
             elif ch.isprintable():
                 return ch.lower()
+            
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)

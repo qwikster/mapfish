@@ -4,9 +4,10 @@ import readline
 import json
 import os
 from mapfisher.ui import SettingsUI
-from mapfisher.geocode import location_completer, geocode_location
+from mapfisher.geocode import location_completer
+from mapfisher.map import render_map
 
-CONFIG_FILE = "config.json"
+CONFIG_FILE = "config.json" # TODO: check if distributors break this
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -24,7 +25,27 @@ def save_config(config):
         
 def entry():
     config = load_config()
-    # etc
+    
+    # fallback
+    readline.set_completer(location_completer)
+    readline.parse_and_bind("tab: complete")
+    
+    ui = SettingsUI(config)
+    
+    while True:
+        result = ui.run()
+        if result == "quit":
+            break
+        elif result and isinstance(result, tuple):
+            lat, lon = result
+            config["last_location"] = {
+                "lat": lat,
+                "lon": lon
+            }
+            save_config(config)
+            
+            # TODO: weather parser go here
+            render_map(lat, lon)
 
 if __name__ == "__main__":
     entry()

@@ -3,13 +3,14 @@ import shutil
 from mapfisher.input import read_key
 from mapfisher.geocode import suggest_locations, geocode_location
 
-BOX_WIDTH = 60
+BOX_WIDTH = 64
 BOX_HEIGHT = 12
 
 COLOR_RESET = "\x1b[0m"
 COLOR_HIGHLIGHT = "\x1b[47;30m"
 COLOR_SELECTED = "\x1b[42;30m"
 COLOR_PROMPT = "\x1b[34m"
+
 
 def clear():
     sys.stdout.write("\x1b[2j\x1b[H")
@@ -31,6 +32,7 @@ class SettingsUI:
         self.search_input = ""
         self.suggestions = []
         self.selected_sugg = 0
+        self.config = config
     
     def draw_ui(self):
         clear()
