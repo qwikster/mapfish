@@ -1,7 +1,7 @@
 import sys
 import shutil
 from mapfisher.input import read_key
-from mapfisher.geocode import suggest_locations
+from mapfisher.geocode import suggest_locations, geocode_location
 
 BOX_WIDTH = 60
 BOX_HEIGHT = 12
@@ -68,6 +68,53 @@ class SettingsUI:
         
         while True:
             key = read_key()
+            
+            if not self.search_mode:
+                # nav mode
+                if key in ("w", "up"):
+                    self.current_option = max(0, self.current_option - 1)
+                elif key in ("s", "down"):
+                    self.current_option = min(len(self.options) - 1, self.current_option + 1)
+                elif key in ("a", "left"):
+                    self.toggle_state(-1)
+                elif key in ("d", "right"):
+                    self.toggle_state(1)
+                elif key == "enter":
+                    if self.options[self.current_option]["name"] == "search":
+                        self.search_mode = True
+                    elif self.options[self.current_option]["name"] == "quit":
+                        return "quit"
+                
+            else:
+                # search mode
+                if key == "esc":
+                    self.search_mode  = False
+                    self.search_input = ""
+                    self.suggestions = []
+                elif key == "backspace":
+                    if self.search_input:
+                        self.search_input = self.search_input[:-1]
+                        self.update_suggestions()
+                elif key in ("up"):
+                    self.selected_sugg = max(0, self.selected_sugg - 1)
+                elif key in ("down"):
+                    self.selected_sugg = min(len(self.suggestions) - 1, self.selected_sugg + 1)
+                elif key.isalnum() or key in (" ", ",", ".", "-", "+", "'", '"', "°"):
+                    self.search_input += key
+                    self.update_suggestions()
+                elif key == "enter":
+                    if self.suggestions and self.selected_sugg < len(self.suggestions):
+                        location = self.suggestions[self.selected_sugg]
+                    else:
+                        location = self.search_input
+                    lat, lon = geocode_location(location)
+                    if lat and lon:
+                        return (lat, lon)
+                    else:
+                        # error handling here?
+                        pass
+                    
+            self.draw_ui()
     
     def toggle_state(self, direction):
         opt = self.options[self.current_option]
