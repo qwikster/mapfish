@@ -27,8 +27,8 @@ def entry():
     config = load_config()
     
     # fallback
-    readline.set_completer(location_completer)
-    readline.parse_and_bind("tab: complete")
+    # readline.set_completer(location_completer)
+    # readline.parse_and_bind("tab: complete")
     
     ui = SettingsUI(config)
     

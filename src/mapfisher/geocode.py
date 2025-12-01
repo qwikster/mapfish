@@ -1,5 +1,32 @@
 import requests
 import re
+import threading
+import time
+from functools import lru_cache
+
+_current_search_text = ""
+_current_search_lock = threading.Lock()
+_last_suggestions = []
+
+def _search_worker(text):
+    global _last_suggestions
+    time.sleep(0.1)
+    if text != _current_search_text:
+        return
+        # another request finished and superseded this one, which took unusually long
+    suggestions = suggest_locations(text)
+    with _current_search_lock:
+        _last_suggestions = suggestions
+        
+def trigger_async_search(text):
+    global _current_search_text
+    with _current_search_lock:
+        _current_search_text = text
+    threading.Thread(target = _search_worker, args = (text,), daemon = True).start()
+    
+def get_current_suggestions():
+    with _current_search_lock:
+        return _last_suggestions[:]
 
 def parse_lat_long(input_str):
     # DECIMAL (regex by AI. I cannot be bothered to learn regex)
