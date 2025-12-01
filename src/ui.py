@@ -39,6 +39,30 @@ class SettingsUI:
             ""
         ]
         
+        for i, opt in enumerate(self.options[:-1]):
+            highlight = COLOR_HIGHLIGHT if i == self.current_option else ""
+            if opt["states"]:
+                state_idx = opt["states"].index(opt["value"])
+                states_str = " | ".join([COLOR_SELECTED + s + COLOR_RESET if j == state_idx else s for j, s in enumerate(opt["states"])])
+                lines.append(f"{highlight}{opt["label"]}: {states_str}{COLOR_RESET}")
+            else:
+                lines.append(f"{highlight}{opt["label"]}{COLOR_RESET}")
+        
+        draw_box(lines)
+        
+        if self.search_mode:
+            term_width, _ = get_terminal_size()
+            prompt_y = BOX_HEIGHT // 2 + len(lines) // 2 + 1
+            prompt_x = (term_width - BOX_WIDTH) // 2 + 1
+            sys.stdout.write(f"\x1b[{prompt_y};{prompt_x}H")
+            sys.stdout.write(f"{COLOR_PROMPT}>... {self.search_input}{COLOR_RESET}")
+            
+            for i, sugg in enumerate(self.suggestions):
+                sugg_highlight = COLOR_SELECTED if i == self.selected_sugg else ""
+                sys.stdout.write(f"\x1b[{prompt_y + i + 1};{prompt_x}H{sugg_highlight}{sugg[:BOX_WIDTH - 2]}{COLOR_RESET}")
+            
+            sys.stdout.flush()
+                
     def run(self):
         self.draw_ui()
         
