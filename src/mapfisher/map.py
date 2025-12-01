@@ -79,23 +79,27 @@ def render_map(lat, lon, zoom=14, debug = False, fast = False): # TODO: make dyn
     
     cols, rows = shutil.get_terminal_size()
     max_w = cols - 2
-    max_h = max(10, rows) + 4
-    base_aspect = max_w / (max_h * 2.0)
-    base_wmax = 320
-    base_hmax = 180
-    if base_aspect > 1:
-        base_w = base_wmax
-        base_h = max(60, int(base_hmax / base_aspect))
+    reserve_lines = 2
+    available_lines = max(10, rows - reserve_lines)
+    
+    char_aspect = 2.1
+    target_aspect = max_w / (available_lines * char_aspect)
+    
+    base_max = 380
+    if target_aspect > 1:
+        base_w = base_max
+        base_h = max(100, int(base_max / target_aspect))
     else:
-        base_h = base_hmax
-        base_w = max(120, int(base_wmax * base_aspect))
+        base_h = base_max
+        base_w = max(150, int(base_max / target_aspect))
     
     image = context.render_pillow(base_w, base_h)
-    maprend_time = time.perf_counter()
+    # term_w_px, term_h_px = get_terminal_pixels()
     
-    term_w_px, term_h_px = get_terminal_pixels()
+    final_w = max_w * 9
+    final_h = available_lines * 19
     
-    image = image.resize((term_w_px, term_h_px), resample = Image.LANCZOS)
+    image = image.resize((final_w, final_h), resample = Image.LANCZOS)
     resize_time = time.perf_counter()
 
     columns, rows = shutil.get_terminal_size()
