@@ -47,4 +47,4 @@ def validate_input_live(text):
     lat, lon = parse_coordinates(text)
     if lat is not None and lon is not None:
         return True, lat, lon, f"{lat:.6f}, {lon:.6f}"
-    return False, None, None, "Invalid Coordinates"
+    return False, None, None, "Invalid Coordinates\x1b[0m"

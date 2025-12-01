@@ -2,17 +2,17 @@ import sys
 import shutil
 import json
 from mapfisher.input import read_key
-from mapfisher.geocode import geocode_location, get_current_suggestions, trigger_async_search
+from mapfisher.geocode import validate_input_live, parse_coordinates
 
 CONFIG_FILE = "config.json"
 
 BOX_WIDTH = 64
 BOX_HEIGHT = 12
 
-COLOR_RESET = "\x1b[0m"
-COLOR_HIGHLIGHT = "\x1b[47;30m"
-COLOR_SELECTED = "\x1b[42;30m"
-COLOR_PROMPT = "\x1b[34m"
+COLOR_RESET = ""
+COLOR_HIGHLIGHT = "----> "
+COLOR_SELECTED = "> "
+COLOR_PROMPT = ""
 
 
 def clear():
@@ -64,19 +64,14 @@ class SettingsUI:
             box_y = (term_h - BOX_HEIGHT) // 2
             
             prompt_y = box_y + 7
-            sugg_start_y = prompt_y + 2
+            status_y = prompt_y + 2
             
             prompt = f"{COLOR_PROMPT}Coordinates >... {self.search_input}{COLOR_RESET}"
             sys.stdout.write(f"\x1b[{prompt_y};{box_x + 3}H{prompt.ljust(BOX_WIDTH - 6)}")
             
-            current_suggs = get_current_suggestions()
-            for i in range(5):
-                y = sugg_start_y + i
-                sys.stdout.write(f"\x1b[{y};{box_x + 3}H{' ' * (BOX_WIDTH - 6)}")
-                if i < len(current_suggs):
-                    text = current_suggs[i][:BOX_WIDTH - 8]
-                    hl = COLOR_SELECTED if i == self.selected_sugg else ""
-                    sys.stdout.write(f"\x1b[{y};{box_x + 3}H  {hl}{text}{COLOR_RESET}")
+            is_valid, lat, lon, status = validate_input_live(self.search_input)
+            color = "\x1b[32m" if is_valid else "\x1b[31m"
+            sys.stdout.write(f"\x1b[{status_y};{box_x + 3}H{color}{status}{COLOR_RESET}")
                 
             cursor_x = box_x + 3 + len("Coordinates >... ") + len(self.search_input)
             sys.stdout.write(f"\x1b[{prompt_y};{cursor_x}H")
@@ -109,27 +104,15 @@ class SettingsUI:
                 if key == "esc":
                     self.search_mode  = False
                     self.search_input = ""
-                    self.selected_sugg = 0
                 elif key == "backspace":
                     self.search_input = self.search_input[:-1]
-                    trigger_async_search(self.search_input)
-                elif key == "up":
-                    self.selected_sugg = max(0, self.selected_sugg - 1)
-                elif key == "down":
-                    current = get_current_suggestions()
-                    self.selected_sugg = min(len(current) - 1, self.selected_sugg + 1)
-                elif len(key) == 1 and (key.isprintable() or key in " °'\" "):
+                elif len(key) == 1 and key.isprintable():
                     self.search_input += key
-                    trigger_async_search(self.search_input)
                 elif key == "enter":
-                    final = (get_current_suggestions()[self.selected_sugg]
-                             if get_current_suggestions() and self.selected_sugg < len(get_current_suggestions())
-                             else self.search_input)
-                    lat, lon = geocode_location(final)
+                    lat, lon = parse_coordinates(self.search_input)
                     if lat and lon:
                         self.search_mode = False
                         self.search_input = ""
-                        self.selected_sugg = 0
                         return (lat, lon)
                     
             self.draw_ui()

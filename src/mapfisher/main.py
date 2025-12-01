@@ -4,7 +4,6 @@ import readline
 import json
 import os
 from mapfisher.ui import SettingsUI
-from mapfisher.geocode import location_completer
 from mapfisher.map import render_map
 
 CONFIG_FILE = "config.json" # TODO: check if distributors break this
