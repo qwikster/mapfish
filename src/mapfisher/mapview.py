@@ -4,7 +4,7 @@ import re
 from mapfisher.input import read_key
 from mapfisher.map import render_map
 from mapfisher.ui import clear, get_terminal_size
-# from mapfisher.weather import ... # fetch and format
+from mapfisher.weather import fetch_weather
 
 def display_width(s):
     # regex by ai
@@ -21,7 +21,7 @@ class MapViewUI:
         self.config = config
         self.zoom = 14
         self.map_data = None
-        self.weather_data = ... # WEATHER
+        self.weather_data = fetch_weather(self.lat, self.lon, self.config)
         
     def show_loading(self):
         clear()
@@ -38,7 +38,7 @@ class MapViewUI:
         term_w, term_h = get_terminal_size()
         
         # weather box
-        ...
+        print(self.weather_data)
         
         # controls
         controls = "\x1b[38;5;86m< \x1b[32m[+/-]\x1b[38;5;86m zoom | \x1b[32m[r]\x1b[38;5;86meload | \x1b[32m[esc/q]\x1b[38;5;86m back >"
@@ -59,7 +59,7 @@ class MapViewUI:
                 self.zoom = max(1, self.zoom - 1)
                 self.refresh_map()
             elif key == "r":
-                self.weather_data = ... # WEATHER
+                self.weather_data = fetch_weather(self.lat, self.lon, self.config)
                 self.draw_ui()
             elif key in ("esc", "q"):
                 return
