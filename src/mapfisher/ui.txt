@@ -3,10 +3,10 @@
 ╞══════╤═══════════════════════════════╡
 │ -99° │ Light Freezing Drizzle        │
 ├──────┴────────────┬──────────────────┤
-│ Wind NW ⇖ 100km/h | 0mm today        │
+│ 140° (⇖) 100km/h  | 0mm today        │
 ╞══════╤════════════╧══════════════════╡
 │ 01pm ┆ -99° Sunny, 0mm               │
-│ 02pm ┆ -99° Freezing Rain, 10mm      │
+│ 02pm ┆ -99° Freezing Drizzle, 10mm   │
 │ 03pm ┆ -99° etc, xxmm                │
 │ 04pm ┆ -99° etc, xxmm                │
 │ 05pm ┆ -99° etc, xxmm                │

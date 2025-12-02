@@ -1,42 +1,100 @@
 import requests
-import datetime
+from datetime import datetime, date
+from dataclasses import dataclass
+from typing import List, Optional
+
+@dataclass
+class CurrentWeather:
+    time:               datetime
+    temperature:        float
+    condition:          str
+    wind_speed_kmh:     float
+    wind_direction_deg: int
+    wind_direction_str: str
+    precipitation_mm:   float
+    
+@dataclass
+class HourlyForecast:
+    time:             datetime
+    temperature:      float
+    condition:        str
+    precipitation_mm: float
+    
+@dataclass
+class DailyForecast:
+    date:                 date
+    temp_min:             float
+    temp_max:             float
+    condition:            str
+    precipitation_sum_mm: float
+    
+class WeatherData:
+    latitude:  float
+    longitude: float
+    current:   CurrentWeather
+    hourly:    List[HourlyForecast] # count: 5
+    daily:     List[DailyForecast]  # count: 5
+    
 
 WEATHER_CODES = {
-    0: "Sunny",
-    1: "Mainly Sunny",
-    2: "Partly Cloudy",
-    3: "Cloudy",
-    45: "Foggy",
-    48: "Rime Fog",
-    51: "Light Drizzle",
-    53: "Drizzle",
-    55: "Heavy Drizzle",
-    56: "Light Freezing Drizzle",
-    57: "Freezing Drizzle",
-    61: "Light Rain",
-    63: "Rain",
-    65: "Heavy Rain",
-    66: "Light Freezing Rain",
-    67: "Freezing Rain",
-    71: "Light Snow",
-    73: "Snow",
-    75: "Heavy Snow",
-    77: "Snow Grains",
-    80: "Light Showers",
-    81: "Showers",
-    82: "Heavy Showers",
-    85: "Light Snow Showers",
-    86: "Snow Showers",
-    95: "Thunderstorm",
-    96: "Light Thunderstorms With Hail",
-    99: "Thunderstorm With Hail"
+    0 : "\x1b[38;2;255;220;100mSunny\x1b[0m",
+    1 : "\x1b[38;2;255;230;120mMainly Sunny\x1b[0m",
+    2 : "\x1b[38;2;220;220;220mPartly Cloudy\x1b[0m",
+    3 : "\x1b[38;2;180;180;180mCloudy\x1b[0m",
+    45: "\x1b[38;2;200;200;210mFoggy\x1b[0m",
+    48: "\x1b[38;2;190;210;220mRime Fog\x1b[0m",
+    51: "\x1b[38;2;100;180;255mLight Drizzle\x1b[0m",
+    53: "\x1b[38;2;80;160;255mDrizzle\x1b[0m",
+    55: "\x1b[38;2;60;140;255mHeavy Drizzle\x1b[0m",
+    56: "\x1b[38;2;130;190;255mFreezing Drizzle\x1b[0m",
+    57: "\x1b[38;2;110;170;255mFreezing Drizzle\x1b[0m",
+    61: "\x1b[38;2;100;180;255mLight Rain\x1b[0m",
+    63: "\x1b[38;2;80;160;255mRain\x1b[0m",
+    65: "\x1b[38;2;60;140;255mHeavy Rain\x1b[0m",
+    66: "\x1b[38;2;130;190;255mFreezing Rain\x1b[0m",
+    67: "\x1b[38;2;110;170;255mFreezing Rain\x1b[0m",
+    71: "\x1b[38;2;200;230;255mLight Snow\x1b[0m",
+    73: "\x1b[38;2;180;220;255mSnow\x1b[0m",
+    75: "\x1b[38;2;160;210;255mHeavy Snow\x1b[0m",
+    77: "\x1b[38;2;190;220;250mSnow Grains\x1b[0m",
+    80: "\x1b[38;2;100;190;255mLight Showers\x1b[0m",
+    81: "\x1b[38;2;80;170;255mShowers\x1b[0m",
+    82: "\x1b[38;2;60;150;255mHeavy Showers\x1b[0m",
+    85: "\x1b[38;2;180;220;255mSnow Showers\x1b[0m",
+    86: "\x1b[38;2;160;210;255mSnow Showers\x1b[0m",
+    95: "\x1b[38;2;255;200;100mThunderstorm\x1b[0m",
+    96: "\x1b[38;2;255;180;80mThunder + Hail\x1b[0m",
+    99: "\x1b[38;2;255;160;60mThunder + Hail\x1b[0m",
 }
 
-WIND_ARROWS = ['↑ N', '↗ NE', '→ E', '↘ SE', '↓ S', '↙ SW', '← W', '↖ NW']
+#               N    NE    E    SE    S   SW    W    NW
+WIND_ARROWS = ['⬆', '⬈', '➡', '⬊', '⬇', '⬋', '⬅', '⬉']
 
-def get_wind_dir(deg):
+def wind_arrow(deg):
     idx = int((deg + 22.5) % 360 / 45)
     return WIND_ARROWS[idx]
+
+def condition(code):
+    return WEATHER_CODES.get(code, f"No name for code {code}")
+
+def parse_weather(data, config) -> Optional[WeatherData]:
+    try:
+        current = data["current"]
+        hourly  = data["hourly"]
+        daily   = data["daily"]
+
+        curr_time = datetime.fromisoformat(current["time"].replace("Z", "+00:00"))
+        curr_weather = CurrentWeather(
+            time               = curr_time,
+            temperature        = current["temperature_2m"],
+            condition          = condition(current["weather_code"]),
+            wind_speed_kmh     = current["wind_speed_10m"],
+            wind_direction_deg = current["wind_direction_10m"],
+            wind_direction_str = wind_arrow(current["wind_direction_10m"]),
+            precipitation_mm   = current["precipitation"]
+        )
+        
+        
 
 def fetch_weather(lat, lon, config):
     temp_unit   = "celsius" if config["units_temp"]   == "°C" else "fahrenheit"
