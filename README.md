@@ -2,7 +2,7 @@
 A weather app for your CLI, with a fancy map!
 
 ## demo
-
+[demo](https://github.com/user-attachments/assets/23d8d9b3-7e41-47e1-84dd-eb197b8218de)
 
 ## what is it?
 A fast and easy to use CLI weather app with super neat map view!\
