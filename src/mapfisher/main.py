@@ -1,8 +1,8 @@
 # Main entry point
 import json
 import os
-from mapfisher.ui import SettingsUI
-from mapfisher.mapview import MapViewUI
+from flakeframe.ui import SettingsUI
+from flakeframe.mapview import MapViewUI
 
 CONFIG_FILE = "config.json" # TODO: check if distributors break this
 

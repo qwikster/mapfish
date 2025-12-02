@@ -98,7 +98,7 @@ def parse_weather(data, config) -> Optional[WeatherData]:
         )
         
         hourly_list = []
-        for i in range(len(hourly["time"][:5])):
+        for i in range(len(hourly["time"])):
             h_time = datetime.fromisoformat(hourly["time"][i].replace("Z", "+00:00"))
             hourly_list.append(HourlyForecast(
                 time =             h_time,
@@ -108,7 +108,7 @@ def parse_weather(data, config) -> Optional[WeatherData]:
             ))
             
         daily_list = []
-        for i in range(len(daily["time"][:5])):
+        for i in range(len(daily["time"])):
             d_date = date.fromisoformat(daily["time"][i])
             daily_list.append(DailyForecast(
                 date =                 d_date,
