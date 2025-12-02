@@ -1,6 +1,6 @@
 [project]
 name = "flakeframe"
-version = "0.1.0"
+version = "0.1.1"
 description = "Command line weather app with a fancy map display"
 readme = "README.md"
 requires-python = ">=3.12"
