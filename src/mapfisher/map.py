@@ -94,6 +94,7 @@ def render_map(lat, lon, zoom=14, debug = False, fast = False): # TODO: make dyn
         base_w = max(150, int(base_max / target_aspect))
     
     image = context.render_pillow(base_w, base_h)
+    maprend_time = time.perf_counter()
     # term_w_px, term_h_px = get_terminal_pixels()
     
     final_w = max_w * 9
@@ -126,7 +127,7 @@ def render_map(lat, lon, zoom=14, debug = False, fast = False): # TODO: make dyn
     if debug:
         print("\x1b[H\x1b[2J")
         print(data)
-        print("lat/long: ", lat, lon, "\nzoom: ", zoom, "\nsize: ", width, height)
+        print("lat/long: ", lat, lon, "\nzoom: ", zoom)
         print("Setup:       ", setup_time - start_time)
         print("Map render:  ", maprend_time - setup_time)
         print("Resizing:    ", resize_time - maprend_time)

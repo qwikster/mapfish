@@ -38,9 +38,9 @@ class MapViewUI:
         term_w, term_h = get_terminal_size()
         
         # weather box
-        # print(self.weather_data)
-        for i in WEATHER_CODES.values():
-            print(i)
+        box_x = (term_w - 38) // 2
+        box_y = 2
+        sys.stdout.write(f"\x1b[{box_y};{box_x}H ╭──────────────────────────────────────╮")
         
         # controls
         controls = "\x1b[38;5;86m< \x1b[32m[+/-]\x1b[38;5;86m zoom | \x1b[32m[r]\x1b[38;5;86meload | \x1b[32m[esc/q]\x1b[38;5;86m back >"

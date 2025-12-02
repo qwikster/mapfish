@@ -27,13 +27,16 @@ class DailyForecast:
     temp_max:             float
     condition:            str
     precipitation_sum_mm: float
-    
+
+@dataclass
 class WeatherData:
-    latitude:  float
-    longitude: float
-    current:   CurrentWeather
-    hourly:    List[HourlyForecast] # count: 5
-    daily:     List[DailyForecast]  # count: 5
+    latitude:     float
+    longitude:    float
+    current:      CurrentWeather
+    hourly:       List[HourlyForecast] # count: 5
+    daily:        List[DailyForecast]  # count: 5
+    units_temp:   str
+    units_precip: str
     
 
 WEATHER_CODES = {
@@ -84,7 +87,7 @@ def parse_weather(data, config) -> Optional[WeatherData]:
         daily   = data["daily"]
 
         curr_time = datetime.fromisoformat(current["time"].replace("Z", "+00:00"))
-        curr_weather = CurrentWeather(
+        current_weather = CurrentWeather(
             time               = curr_time,
             temperature        = current["temperature_2m"],
             condition          = condition(current["weather_code"]),
@@ -94,6 +97,40 @@ def parse_weather(data, config) -> Optional[WeatherData]:
             precipitation_mm   = current["precipitation"]
         )
         
+        hourly_list = []
+        for i in range(len(hourly["time"][:5])):
+            h_time = datetime.fromisoformat(hourly["time"][i].replace("Z", "+00:00"))
+            hourly_list.append(HourlyForecast(
+                time =             h_time,
+                temperature =      hourly["temperature_2m"][i],
+                condition =        condition(hourly["weather_code"][i]),
+                precipitation_mm = hourly["precipitation"][i]
+            ))
+            
+        daily_list = []
+        for i in range(len(daily["time"][:5])):
+            d_date = date.fromisoformat(daily["time"][i])
+            daily_list.append(DailyForecast(
+                date =                 d_date,
+                temp_min =             daily["temperature_2m_min"][i],
+                temp_max =             daily["temperature_2m_max"][i],
+                condition =            condition(daily["weather_code"][i]),
+                precipitation_sum_mm = daily["precipitation_sum"][i]
+            ))
+            
+        return WeatherData(
+            latitude =     round(data.get("latitude", 0), 2),
+            longitude =    round(data.get("longitude", 0), 2),
+            current =      current_weather,
+            hourly =       hourly_list,
+            daily =        daily_list,
+            units_temp =   config["units_temp"],
+            units_precip = config["units_precip"]
+        )
+    
+    except (KeyError, IndexError, ValueError) as e:
+        print(f"WARNING: Failed to parse weather data: {e}")
+        return None
         
 
 def fetch_weather(lat, lon, config):
@@ -113,5 +150,5 @@ def fetch_weather(lat, lon, config):
     }
     response = requests.get(url, params = params)
     if response.status_code == 200:
-        return response.json()
+        return parse_weather(response.json(), config)
     return None
