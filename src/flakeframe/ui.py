@@ -1,8 +1,8 @@
 import sys
 import shutil
 import json
-from mapfisher.input import read_key
-from mapfisher.geocode import validate_input_live, parse_coordinates
+from flakeframe.input import read_key
+from flakeframe.geocode import validate_input_live, parse_coordinates
 
 CONFIG_FILE = "config.json"
 

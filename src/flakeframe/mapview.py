@@ -2,10 +2,10 @@ import sys
 import shutil
 import re
 import datetime
-from mapfisher.input import read_key
-from mapfisher.map import render_map
-from mapfisher.ui import clear, get_terminal_size
-from mapfisher.weather import fetch_weather, WEATHER_CODES
+from flakeframe.input import read_key
+from flakeframe.map import render_map
+from flakeframe.ui import clear, get_terminal_size
+from flakeframe.weather import fetch_weather, WEATHER_CODES
 
 def display_width(s):
     # regex by ai
