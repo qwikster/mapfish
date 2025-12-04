@@ -66,14 +66,14 @@ class SettingsUI:
             prompt_y = box_y + 7
             status_y = prompt_y + 2
             
-            prompt = f"{COLOR_PROMPT}Coordinates >... {self.search_input}{COLOR_RESET}"
+            prompt = f"{COLOR_PROMPT}Coordinates or location >... {self.search_input}{COLOR_RESET}"
             sys.stdout.write(f"\x1b[{prompt_y};{box_x + 3}H{prompt.ljust(BOX_WIDTH - 6)}")
             
             is_valid, lat, lon, status = validate_input_live(self.search_input)
             color = "\x1b[32m" if is_valid else "\x1b[31m"
             sys.stdout.write(f"\x1b[{status_y};{box_x + 3}H{color}{status}{COLOR_RESET}")
                 
-            cursor_x = box_x + 3 + len("Coordinates >... ") + len(self.search_input)
+            cursor_x = box_x + 3 + len("Coordinates or location >... ") + len(self.search_input)
             sys.stdout.write(f"\x1b[{prompt_y};{cursor_x}H")
             sys.stdout.flush()
                 
@@ -109,7 +109,7 @@ class SettingsUI:
                 elif len(key) == 1 and key.isprintable():
                     self.search_input += key
                 elif key == "enter":
-                    lat, lon = parse_coordinates(self.search_input)
+                    lat, lon = parse_coordinates(self.search_input, final = True)
                     if lat and lon:
                         self.search_mode = False
                         self.search_input = ""

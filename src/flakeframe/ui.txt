@@ -19,7 +19,6 @@
 ╰──────┴───────────────────────────────╯
 
 todo:
-- fix hourly forecast
 location w/ nominatim
 actual unit selection
 improve demo
