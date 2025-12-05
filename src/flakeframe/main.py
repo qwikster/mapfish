@@ -4,8 +4,10 @@ import os
 from configparser import ConfigParser
 from flakeframe.ui import SettingsUI
 from flakeframe.mapview import MapViewUI
+from flakeframe.theme import ThemeHandler, Theme, Asset
 
 CONFIG_FILE = "flakeframe.json" # TODO: check if distributors break this
+THEME_FILE = "flakeframe.themes"
 
 def load_config(config):
     if os.path.exists(CONFIG_FILE):
@@ -25,6 +27,11 @@ def save_config(config):
 def entry():
     config = ConfigParser()
     load_config(config)
+    themes = ThemeHandler()
+    themes.load_themefile(THEME_FILE)
+    for key in themes.storage["default"]:
+        print(key)
+    input()
     
     # fallback
     # readline.set_completer(location_completer)
