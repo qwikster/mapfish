@@ -11,9 +11,10 @@ CONFIG_FILE = "flakeframe.json"
 BOX_WIDTH = 40
 BOX_HEIGHT = 9
 
-COLOR_RESET = ""
-COLOR_HIGHLIGHT = "----> "
-COLOR_SELECTED = "> "
+COLOR_RESET = "\x1b[0m"
+COLOR_BORDER = "\x1b[38;2;40;230;180m"
+COLOR_HIGHLIGHT = "\x1b[38;2;180;160;220m----> "
+COLOR_SELECTED = "\x1b[38;2;255;128;120m> "
 COLOR_PROMPT = ""
 
 def display_width(s):
@@ -25,17 +26,22 @@ def clear():
     sys.stdout.write("\x1b[2J\x1b[H")
     sys.stdout.flush()
 
+def display_center(text: str, size: int):
+    padding = size - display_width(text)
+    bump = "" if padding % 2 == 0 else " "
+    return " " * (padding // 2) + text + " " * (padding // 2) + bump
+
 def get_terminal_size():
     return shutil.get_terminal_size((80, 24))
 
 class SettingsUI:
     def __init__(self, config):
         self.options = [
-            {"name": "units_precip", "label": "Distance Units:"   , "states": ["mm", "inch"], "value": config["DEFAULT"]["units_precip"]},
-            {"name": "units_temp"  , "label": "Temperature Units:", "states": ["°C", "°F"  ], "value": config["DEFAULT"]["units_temp"]},
-            {"name": "show_map"    , "label": "Show Map?",          "states": ["Yes", "No", "Only"], "value": config["DEFAULT"]["show_map"]},
+            {"name": "units_precip", "label": "\x1b[38;2;255;255;128mDistance Units:"   , "states": ["mm", "inch"], "value": config["DEFAULT"]["units_precip"]},
+            {"name": "units_temp"  , "label": "\x1b[38;2;255;255;128mTemperature Units:", "states": ["°C", "°F"  ], "value": config["DEFAULT"]["units_temp"]},
+            {"name": "show_map"    , "label": "\x1b[38;2;255;255;128mShow Map?",          "states": ["Yes", "No", "Only"], "value": config["DEFAULT"]["show_map"]},
             {"name": "search", "label": "Search Locations" , "states": None          , "value": None},
-            {"name": "quit"  , "label": "Quit :("          , "states": None          , "value": None},
+            {"name": "quit"  , "label": "\x1b[38;2;255;128;120mQuit :("          , "states": None          , "value": None},
         ]
         self.current_option = 0
         self.search_mode = False
@@ -50,29 +56,30 @@ class SettingsUI:
             "flakeframe | setup",
             ""
         ]
-        
         for i, opt in enumerate(self.options[:]):
-            highlight = COLOR_HIGHLIGHT if i == self.current_option and not self.search_mode else ""
             if opt["states"]:
                 state_idx = opt["states"].index(opt["value"])
                 states_str = " | ".join(
-                    COLOR_SELECTED + s + COLOR_RESET if j == state_idx else s
+                    COLOR_SELECTED + s + "\x1b[38;2;255;255;128m" if j == state_idx else s
                     for j, s in enumerate(opt["states"])
                 )
-                lines.append(f"{highlight}  {opt["label"]} {states_str}{COLOR_RESET}")
+                lines.append(f"{opt["label"]} {states_str}{COLOR_BORDER}")
             else:
-                lines.append(f"{highlight}  {opt["label"]}{COLOR_RESET}")
+                lines.append(f"{opt["label"]}{COLOR_BORDER}")
         
         draw_box(lines)
+        term_w, term_h = get_terminal_size()
+        box_x = (term_w - BOX_WIDTH) // 2
+        box_y = (term_h - BOX_HEIGHT) // 2
+        
+        prompt_y = box_y + 7
+        status_y = prompt_y + 2
+        
+        sys.stdout.write(f"\x1b[{box_y + self.current_option + 3};{box_x - 2}H{COLOR_HIGHLIGHT}")
+        sys.stdout.write(f"\x1b[{box_y + self.current_option + 3};{box_x - 3}H")
+        sys.stdout.flush()
         
         if self.search_mode:
-            term_w, term_h = get_terminal_size()
-            box_x = (term_w - BOX_WIDTH) // 2
-            box_y = (term_h - BOX_HEIGHT) // 2
-            
-            prompt_y = box_y + 7
-            status_y = prompt_y + 2
-            
             prompt = f"{COLOR_PROMPT}\x1b[38;2;180;160;220m>... {self.search_input}{COLOR_RESET}"
             sys.stdout.write(f"\x1b[{prompt_y};{box_x + 1}H                           ")
             sys.stdout.write(f"\x1b[{prompt_y};{box_x + 1}H{prompt.ljust(BOX_WIDTH - 6)}")
@@ -157,7 +164,7 @@ def draw_box(lines):
     for i in range(content_height):
         y = start_y + 1 + i
         if i < len(lines):
-            padded = lines[i].center(BOX_WIDTH - 2)
+            padded = display_center(lines[i], BOX_WIDTH - 2)
             sys.stdout.write(f"\x1b[{y};{start_x}H\x1b[38;2;40;230;180m│{padded}│")
         else:
             sys.stdout.write(f"\x1b[{y};{start_x}\x1b[38;2;40;230;180mH│{" " * (BOX_WIDTH - 2)}│")

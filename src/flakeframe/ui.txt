@@ -19,12 +19,11 @@
 ╰──────┴───────────────────────────────╯
 
 todo:
+color codes!!
 
-improve demo
 "transparent" background
 alternate widget locations
 lite mode
 better main menu
-better persistence
 
 note to self: brain hurty :thumbup:

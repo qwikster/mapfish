@@ -70,7 +70,7 @@ class MapViewUI:
             h_time = h.time.strftime("%I%p").lower()
             h_tempcol = "\x1b[0;38;2;255;100;0m" if h.temperature > 0 else "\x1b[0;38;2;0;128;255m"
             h_temp = f"{h_tempcol}{int(h.temperature):3}°{rsc}"
-            h_precip = f"{h.precipitation:.0f}{pc_units}"
+            h_precip = f"{h.precipitation:.2f}{pc_units}" if not inches else f"{h.precipitation:.0f}{pc_units}"
             h_line = f" {h_time} ┆ {h_temp} {h.condition}, {h_precip} "
             linelen = display_width(h_line)
             h_line = h_line + (" " * (38 - linelen))
@@ -85,7 +85,7 @@ class MapViewUI:
             d_highcol = "\x1b[0;38;2;255;100;0m" if d.temp_max > 0 else "\x1b[0;38;2;0;128;255m"
             d_low = f"{d_lowcol}{int(d.temp_min)}{rsc}"
             d_high = f"{d_highcol}{int(d.temp_max)}{rsc}"
-            d_precip = f"{d.precipitation_sum:.0f}{pc_units}"
+            d_precip = f"{d.precipitation_sum:.2f}{pc_units}" if inches else f"{d.precipitation_sum:.0f}{pc_units}"
             d_line = f" {d_day}  ┆ {d_low} to {d_high}°, {d.condition}, {d_precip} "
             linelen = display_width(d_line)
             d_line = d_line + (" " * (38 - linelen))
