@@ -1,19 +1,25 @@
 import sys
 import shutil
 import json
+import re
+import time
 from flakeframe.input import read_key
 from flakeframe.geocode import validate_input_live, parse_coordinates
 
 CONFIG_FILE = "flakeframe.json"
 
-BOX_WIDTH = 64
-BOX_HEIGHT = 12
+BOX_WIDTH = 40
+BOX_HEIGHT = 9
 
 COLOR_RESET = ""
 COLOR_HIGHLIGHT = "----> "
 COLOR_SELECTED = "> "
 COLOR_PROMPT = ""
 
+def display_width(s):
+    # regex by ai
+    s = re.sub(r'\x1b\[[0-9;]*m', '', s)
+    return len(s)
 
 def clear():
     sys.stdout.write("\x1b[2J\x1b[H")
@@ -25,10 +31,11 @@ def get_terminal_size():
 class SettingsUI:
     def __init__(self, config):
         self.options = [
-            {"name": "units_precip", "label": "Distance Units"   , "states": ["mm", "inch"], "value": config["DEFAULT"]["units_precip"]},
-            {"name": "units_temp"  , "label": "Temperature Units", "states": ["°C", "°F"  ], "value": config["DEFAULT"]["units_temp"]},
+            {"name": "units_precip", "label": "Distance Units:"   , "states": ["mm", "inch"], "value": config["DEFAULT"]["units_precip"]},
+            {"name": "units_temp"  , "label": "Temperature Units:", "states": ["°C", "°F"  ], "value": config["DEFAULT"]["units_temp"]},
+            {"name": "show_map"    , "label": "Show Map?",          "states": ["Yes", "No", "Only"], "value": config["DEFAULT"]["show_map"]},
             {"name": "search", "label": "Search Locations" , "states": None          , "value": None},
-            {"name": "quit"  , "label": "Quit"             , "states": None          , "value": None},
+            {"name": "quit"  , "label": "Quit :("          , "states": None          , "value": None},
         ]
         self.current_option = 0
         self.search_mode = False
@@ -52,7 +59,7 @@ class SettingsUI:
                     COLOR_SELECTED + s + COLOR_RESET if j == state_idx else s
                     for j, s in enumerate(opt["states"])
                 )
-                lines.append(f"{highlight}  {opt["label"]}: {states_str}{COLOR_RESET}")
+                lines.append(f"{highlight}  {opt["label"]} {states_str}{COLOR_RESET}")
             else:
                 lines.append(f"{highlight}  {opt["label"]}{COLOR_RESET}")
         
@@ -66,14 +73,15 @@ class SettingsUI:
             prompt_y = box_y + 7
             status_y = prompt_y + 2
             
-            prompt = f"{COLOR_PROMPT}Coordinates or location >... {self.search_input}{COLOR_RESET}"
-            sys.stdout.write(f"\x1b[{prompt_y};{box_x + 3}H{prompt.ljust(BOX_WIDTH - 6)}")
+            prompt = f"{COLOR_PROMPT}\x1b[38;2;180;160;220m>... {self.search_input}{COLOR_RESET}"
+            sys.stdout.write(f"\x1b[{prompt_y};{box_x + 1}H                           ")
+            sys.stdout.write(f"\x1b[{prompt_y};{box_x + 1}H{prompt.ljust(BOX_WIDTH - 6)}")
             
             is_valid, lat, lon, status = validate_input_live(self.search_input)
             color = "\x1b[32m" if is_valid else "\x1b[31m"
             sys.stdout.write(f"\x1b[{status_y};{box_x + 3}H{color}{status}{COLOR_RESET}")
                 
-            cursor_x = box_x + 3 + len("Coordinates or location >... ") + len(self.search_input)
+            cursor_x = box_x + 1 + display_width(">... ") + len(self.search_input)
             sys.stdout.write(f"\x1b[{prompt_y};{cursor_x}H")
             sys.stdout.flush()
                 
@@ -107,9 +115,19 @@ class SettingsUI:
                 elif key == "backspace":
                     self.search_input = self.search_input[:-1]
                 elif len(key) == 1 and key.isprintable():
-                    self.search_input += key
+                    if len(self.search_input) <= 32:
+                        self.search_input += key
                 elif key == "enter":
-                    lat, lon = parse_coordinates(self.search_input, final = True)
+                    lat, lon, invalid = parse_coordinates(self.search_input, final = True)
+                    if invalid:
+                        term_w, term_h = get_terminal_size()
+                        status_y = ((term_h - BOX_HEIGHT) // 2) + 9
+                        box_x = (term_w - BOX_WIDTH) // 2
+                        
+                        sys.stdout.write(f"\x1b[{status_y};{box_x + 3}H\x1b[31mLocation not found!{COLOR_RESET}")
+                        sys.stdout.flush()
+                        time.sleep(1.2) # avoid rate limit
+                        
                     if lat and lon:
                         self.search_mode = False
                         self.search_input = ""
@@ -133,21 +151,23 @@ def draw_box(lines):
     start_y = (term_height - BOX_HEIGHT) // 2
     
     sys.stdout.write(f"\x1b[{start_y};{start_x}H")
-    sys.stdout.write("╭" + "─" * (BOX_WIDTH - 2) + "╮\n")
+    sys.stdout.write("\x1b[38;2;40;230;180m╭" + "─" * (BOX_WIDTH - 2) + "╮\n")
     
     content_height = BOX_HEIGHT - 2
     for i in range(content_height):
         y = start_y + 1 + i
         if i < len(lines):
             padded = lines[i].center(BOX_WIDTH - 2)
-            sys.stdout.write(f"\x1b[{y};{start_x}H│{padded}│")
+            sys.stdout.write(f"\x1b[{y};{start_x}H\x1b[38;2;40;230;180m│{padded}│")
         else:
-            sys.stdout.write(f"\x1b[{y};{start_x}H│{" " * (BOX_WIDTH - 2)}│")
+            sys.stdout.write(f"\x1b[{y};{start_x}\x1b[38;2;40;230;180mH│{" " * (BOX_WIDTH - 2)}│")
             
     bottom_y = start_y + BOX_HEIGHT - 1
-    sys.stdout.write(f"\x1b[{bottom_y};{start_x}H╰" + "─" * (BOX_WIDTH - 2) + "╯")
+    sys.stdout.write(f"\x1b[{bottom_y};{start_x}H\x1b[38;2;40;230;180m╰" + "─" * (BOX_WIDTH - 2) + "╯")
     sys.stdout.flush()
     
 def save_config(config):
     with open(CONFIG_FILE, "w") as f:
         config.write(f)
+        
+# \x1b[38;2;r;g;bm

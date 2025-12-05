@@ -14,6 +14,7 @@ def load_config(config):
     else:
         config["DEFAULT"]["units_precip"] = "mm"
         config["DEFAULT"]["units_temp"] = "°C"
+        config["DEFAULT"]["show_map"] = "Yes"
         # config["DEFAULT"]["last_location"] = None
 
 def save_config(config):

@@ -12,7 +12,7 @@ def parse_coordinates(input_str: str, final: bool) -> (float, float):
             lat = float(parts[0])
             lon = float(parts[1])
             if -90 <= lat <= 90 and -180 <= lon <= 180:
-                return lat, lon
+                return lat, lon, False
         except Exception:
             pass
         
@@ -37,7 +37,7 @@ def parse_coordinates(input_str: str, final: bool) -> (float, float):
                 lat = -lat
             if match.group(8).upper() == "w":
                 lon = -lon
-            return lat, lon
+            return lat, lon, False
             
         except Exception: # user doopid
             pass
@@ -54,14 +54,17 @@ def parse_coordinates(input_str: str, final: bool) -> (float, float):
         response = resp.json()
         # TODO: global rate limit
         
-        lat = float(response[0]["lat"])
-        lon = float(response[0]["lon"])
-        return lat, lon
+        try:
+            lat = float(response[0]["lat"])
+            lon = float(response[0]["lon"])
+            return lat, lon, False
+        except Exception: # response failed for whatever reason
+            return None, None, True
     
-    return None, None # no coord
+    return None, None, False # no coord
 
 def validate_input_live(text):
-    lat, lon = parse_coordinates(text, final = False)
+    lat, lon, _ = parse_coordinates(text, final = False)
     if lat is not None and lon is not None:
         return True, lat, lon, f"{lat:.6f}, {lon:.6f}\x1b[0m"
     return False, None, None, "Invalid Coordinates\x1b[0m"

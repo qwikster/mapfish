@@ -4,13 +4,11 @@ import re
 from datetime import date, datetime, time
 from flakeframe.input import read_key
 from flakeframe.map import render_map
-from flakeframe.ui import clear, get_terminal_size
+from flakeframe.ui import clear, get_terminal_size, display_width
 from flakeframe.weather import fetch_weather, WEATHER_CODES
 
-def display_width(s):
-    # regex by ai
-    s = re.sub(r'\x1b\[[0-9;]*m', '', s)
-    return len(s)
+def in_inches(num) -> float:
+    return round(num * 0.0393701, 2)
 
 class MapViewUI:
     def __init__(self, lat, lon, config):
@@ -32,7 +30,13 @@ class MapViewUI:
         
     def draw_ui(self):
         clear()
-        sys.stdout.write(self.map_data + "\n")
+        if self.config["DEFAULT"]["show_map"] in ["Yes", "Only"]:
+            sys.stdout.write(self.map_data + "\n")
+            
+        if self.config["DEFAULT"]["show_map"] == ["Only"]:
+            sys.stdout.flush()
+            return
+        
         term_w, term_h = get_terminal_size()
         rsc = "\x1b[0m"
         
@@ -41,6 +45,7 @@ class MapViewUI:
         box_y = 2
         c_time = self.weather_data.current.time.strftime("%I:%M %p")
         c_tempcol = "\x1b[0;38;2;255;100;0m" if self.weather_data.current.temperature > 0 else "\x1b[0;38;2;0;128;255m"
+        inches = self.config["DEFAULT"]["units_precip"] == "inch"
         
         sys.stdout.write(f"\x1b[{box_y    };{box_x}H ╭──────────────────────────────────────╮ ")
         sys.stdout.write(f"\x1b[{box_y + 1};{box_x}H │      {self.lat:+.2f}, {self.lon:+.2f} @ {c_time}       │ ")
@@ -51,8 +56,12 @@ class MapViewUI:
         
         sys.stdout.write(f"\x1b[{box_y + 3};{box_x}H │ {c_tempcol}{int(self.weather_data.current.temperature):3}°{rsc} │ {cond} │ ")
         sys.stdout.write(f"\x1b[{box_y + 4};{box_x}H ├──────┴────────────┬──────────────────┤ ")
-        sys.stdout.write(f"\x1b[{box_y + 5};{box_x}H │ {self.weather_data.current.wind_direction_deg:>3}° ({self.weather_data.current.wind_direction_str}) {self.weather_data.current.wind_speed_kmh:>4.0f}km/h │ {f"{self.weather_data.current.precipitation_mm:<.0f}mm precip":16} │ ")
+        
+        curr_precip = f"{self.weather_data.current.precipitation}mm" if not inches else f"{self.weather_data.current.precipitation}in"
+        sys.stdout.write(f"\x1b[{box_y + 5};{box_x}H │ {self.weather_data.current.wind_direction_deg:>3}° ({self.weather_data.current.wind_direction_str}) {self.weather_data.current.wind_speed_kmh:>4.0f}km/h │ {f"{curr_precip} precip":16} │ ")
         sys.stdout.write(f"\x1b[{box_y + 6};{box_x}H ╞══════╤════════════╧══════════════════╡ ")
+        
+        pc_units = "mm" if not inches else "in"
         
         for i in range(5):
             current_time = datetime.now().hour
@@ -61,7 +70,7 @@ class MapViewUI:
             h_time = h.time.strftime("%I%p").lower()
             h_tempcol = "\x1b[0;38;2;255;100;0m" if h.temperature > 0 else "\x1b[0;38;2;0;128;255m"
             h_temp = f"{h_tempcol}{int(h.temperature):3}°{rsc}"
-            h_precip = f"{h.precipitation_mm:.0f}mm"
+            h_precip = f"{h.precipitation:.0f}{pc_units}"
             h_line = f" {h_time} ┆ {h_temp} {h.condition}, {h_precip} "
             linelen = display_width(h_line)
             h_line = h_line + (" " * (38 - linelen))
@@ -76,7 +85,7 @@ class MapViewUI:
             d_highcol = "\x1b[0;38;2;255;100;0m" if d.temp_max > 0 else "\x1b[0;38;2;0;128;255m"
             d_low = f"{d_lowcol}{int(d.temp_min)}{rsc}"
             d_high = f"{d_highcol}{int(d.temp_max)}{rsc}"
-            d_precip = f"{d.precipitation_sum_mm:.0f}mm"
+            d_precip = f"{d.precipitation_sum:.0f}{pc_units}"
             d_line = f" {d_day}  ┆ {d_low} to {d_high}°, {d.condition}, {d_precip} "
             linelen = display_width(d_line)
             d_line = d_line + (" " * (38 - linelen))
