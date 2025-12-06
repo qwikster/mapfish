@@ -4,7 +4,7 @@ import os
 from configparser import ConfigParser
 from flakeframe.ui import SettingsUI
 from flakeframe.mapview import MapViewUI
-from flakeframe.theme import ThemeHandler, Theme, Asset
+from flakeframe.theme import ThemeHandler, Theme, Asset, ThemeUI
 
 CONFIG_FILE = "flakeframe.json" # TODO: check if distributors break this
 THEME_FILE = "flakeframe.themes"
@@ -35,7 +35,9 @@ def entry():
         if result == "quit":
             break
         elif result == "themes":
-            pass # RUN THEME UI
+            themeui = ThemeUI(themes)
+            themeui.run_menu()
+            
         elif result and isinstance(result, tuple):
             lat, lon = result
             save_config(config)

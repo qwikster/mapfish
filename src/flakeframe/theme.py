@@ -1,7 +1,10 @@
 import configparser
 import os
+import sys
 from dataclasses import dataclass
 from typing import List, Optional
+from flakeframe.input import read_key
+from flakeframe.ui import display_width, display_center, get_terminal_size, goto
 
 @dataclass
 class Asset:
@@ -26,7 +29,7 @@ class ThemeHandler:
         
         self.storage = configparser.ConfigParser() # should never be actually read except when loading from
         self.default_theme = default_theme
-        self.current: Theme
+        self.current: Theme = None
         self.themes: List[Theme] = []
             
     def save(self):
@@ -109,10 +112,22 @@ class ThemeHandler:
         if not os.path.exists(path):
             self.create_themefile(path)
         self.load()
-        print("work")
-        print(self.themes)
-        input()
         
 class ThemeUI:
-    def __init__(handler: ThemeHandler):
-        pass
+    def __init__(self, handler: ThemeHandler):
+        self.handler = handler
+        self.current = handler.current
+    
+    def run_menu(self):
+        while(True):
+            rows, cols = get_terminal_size()
+            action = read_key()
+            
+            box_h = 10 # TODO: set dynamically
+            box_w = 32
+            
+            box_x = cols - box_w
+            box_y = rows - box_h
+            
+            goto(box_x, box_y)
+            print("action", action)

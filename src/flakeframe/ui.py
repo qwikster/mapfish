@@ -9,7 +9,7 @@ from flakeframe.geocode import validate_input_live, parse_coordinates
 CONFIG_FILE = "flakeframe.json"
 
 BOX_WIDTH = 40
-BOX_HEIGHT = 9
+BOX_HEIGHT = 10
 
 COLOR_RESET = "\x1b[0m"
 COLOR_BORDER = "\x1b[38;2;40;230;180m"
@@ -33,6 +33,9 @@ def display_center(text: str, size: int):
 
 def get_terminal_size():
     return shutil.get_terminal_size((80, 24))
+
+def goto(x, y): # dont worry its not that goto
+    sys.stdout.write(f"\x1b[{y};{x}H")
 
 class SettingsUI:
     def __init__(self, config):
@@ -115,7 +118,7 @@ class SettingsUI:
                     elif self.options[self.current_option]["name"] == "quit":
                         return "quit"
                     elif self.options[self.current_option]["name"] == "themes":
-                        return "theme"
+                        return "themes"
                 
             else:
                 # search mode
