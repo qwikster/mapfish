@@ -34,6 +34,8 @@ def entry():
         
         if result == "quit":
             break
+        elif result == "themes":
+            pass # RUN THEME UI
         elif result and isinstance(result, tuple):
             lat, lon = result
             save_config(config)

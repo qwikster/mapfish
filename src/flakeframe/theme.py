@@ -26,11 +26,11 @@ class ThemeHandler:
         
         self.storage = configparser.ConfigParser() # should never be actually read except when loading from
         self.default_theme = default_theme
-        self.current: str
+        self.current: Theme
         self.themes: List[Theme] = []
             
     def save(self):
-        # load from configfile format to usable OOP
+        # save to configfile format then write to disk
         if not hasattr(self, "themefile"):
             raise RuntimeError("Attempted to save themes before savefile was picked, use load_savefile(path) first.")
         
@@ -46,12 +46,13 @@ class ThemeHandler:
             self.storage.write(themefile)
     
     def load(self):
+        # load from configfile format to usable OOP
         if not hasattr(self, "themefile"):
             raise RuntimeError("Attempted to load themes before savefile was picked, use load_savefile(path) first (or probably instead).")
 
         self.storage = configparser.ConfigParser() # CLEAR
         self.storage.read(self.themefile)
-        self.current = self.storage["DEFAULT"]["current_theme"]
+        self.load_theme(self.storage["DEFAULT"]["current_theme"])
         
         for th in self.storage.sections():
             assetlist = []
@@ -67,7 +68,30 @@ class ThemeHandler:
             ))
     
     def new_theme(self, theme):
-        self.themes.append(Theme)
+        self.themes.append(theme)
+        
+    def get_themes(self) -> List[Theme]:
+        return self.themes
+    
+    def get_assets(self) -> List[Asset]:
+        return self.current.assets
+    
+    def load_theme(self, theme: Theme | str):
+        if type(theme) is str:
+            for i in self.themes:
+                if i.name == theme:
+                    theme = i
+        self.current = theme
+    
+    # to get a theme color:
+    # preview = themes.get_themes()
+    # themes = []
+    # for i in preview:
+    #      themes.append(preview.name)
+    # (pick theme here)
+    # themes.load_theme(picked)
+    # (you should know which colors it has)
+    # themes.get_termcol()
     
     def create_themefile(self, path):
         self.storage["DEFAULT"]["current_theme"] = "default"
@@ -88,3 +112,7 @@ class ThemeHandler:
         print("work")
         print(self.themes)
         input()
+        
+class ThemeUI:
+    def __init__(handler: ThemeHandler):
+        pass

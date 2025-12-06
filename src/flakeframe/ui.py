@@ -40,6 +40,7 @@ class SettingsUI:
             {"name": "units_precip", "label": "\x1b[38;2;255;255;128mDistance Units:"   , "states": ["mm", "inch"], "value": config["DEFAULT"]["units_precip"]},
             {"name": "units_temp"  , "label": "\x1b[38;2;255;255;128mTemperature Units:", "states": ["°C", "°F"  ], "value": config["DEFAULT"]["units_temp"]},
             {"name": "show_map"    , "label": "\x1b[38;2;255;255;128mShow Map?",          "states": ["Yes", "No", "Only"], "value": config["DEFAULT"]["show_map"]},
+            {"name": "themes",       "label": "Themes...",                                "states": None, "value": None},
             {"name": "search", "label": "Search Locations" , "states": None          , "value": None},
             {"name": "quit"  , "label": "\x1b[38;2;255;128;120mQuit :("          , "states": None          , "value": None},
         ]
@@ -113,6 +114,8 @@ class SettingsUI:
                         self.search_mode = True
                     elif self.options[self.current_option]["name"] == "quit":
                         return "quit"
+                    elif self.options[self.current_option]["name"] == "themes":
+                        return "theme"
                 
             else:
                 # search mode
