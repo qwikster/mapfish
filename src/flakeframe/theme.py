@@ -19,6 +19,12 @@ class Theme:
     name: str
     author: str
     assets: List[Asset]
+    
+    def __post_init__(self):
+        self._index: Dict[str, Asset] = {a.name: a for a in self.assets}
+        
+    def get(self, name: str) -> Asset | None:
+        return self._index.get(name)
 
 class ThemeHandler:
     def __init__(self, default_theme =
@@ -31,7 +37,7 @@ class ThemeHandler:
         self.default_theme = default_theme
         self.current: Theme = None
         self.themes: List[Theme] = []
-            
+    
     def save(self):
         # save to configfile format then write to disk
         if not hasattr(self, "themefile"):
@@ -158,8 +164,18 @@ class ThemeUI:
             clear()
             width, height = get_terminal_size()
             
-            box_h = 10
-            box_w = 32
+            box_h, box_w = 10, 32
+            box_x = (width - box_w) // 2
+            box_y = (height - box_h) // 2
+            
+            choices = []
+            for th in self.handler.get_themes():
+                choices.append({
+                    "name": th.name,
+                    "col": th.assets,
+                })
             
             action = read_key()
             sys.stdout.flush()
+            
+            # use theme.get("name") to look up an asset in a theme
