@@ -2,7 +2,7 @@ import configparser
 import os
 import sys
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict
 from flakeframe.input import read_key
 from flakeframe.ui import display_width, display_center, get_terminal_size, goto, clear
 
@@ -161,6 +161,11 @@ class ThemeUI:
             input()
             
     def run_menu(self):
+        clear()
+        print("not implemented!")
+        input("[any]")
+        return("quit")
+        
         while(True):
             clear()
             width, height = get_terminal_size()
@@ -173,20 +178,18 @@ class ThemeUI:
             
             choices = []
             for th in self.handler.get_themes():
-                choices.append( (th.name, th) )
-            
-            choices.append(("new"))
+                choices.append(th.name)
             choices.append(("back"))
             
             sys.stdout.write(goto(x, y) + "╭" + "─" * box_w + "╮")
             
             i = 0
             for ch in choices:
-                sys.stdout.write(goto(x, y + 1 + i) + "│" + display_center(ch[0], box_w) + "│")
+                sys.stdout.write(goto(x, y + 1 + i) + "│" + display_center(ch, box_w) + "│")
                 i += 1
-                
+
+            sys.stdout.write(goto(x - 2, y + 1 + self.choice) + highlight)
             sys.stdout.flush()
-            input()
             
             key = read_key()
             if key in ["up", "w"]:
@@ -194,14 +197,7 @@ class ThemeUI:
             elif key in ["down", "s"]:
                 self.choice = min(len(choices), self.choice + 1)
             elif key in ["enter", "space"]:
-                if ch[0] == "back":
+                if choices[self.choice] == "back":
                     return("quit")
-                elif ch[0] == "new":
-                    self.create_theme()
                 else:
-                    self.handler.load_theme(ch[1])
-            
-            # use theme.get("name") to look up an asset in a theme
-            
-    def create_theme(self):
-        pass # TODO: the uhhhhhhhh this
+                    self.handler.load_theme(choices[self.choice])

@@ -39,7 +39,7 @@ def entry():
             themeui = ThemeUI(themes)
             res = themeui.run_menu()
             if res == "quit":
-                pass
+                continue
             elif res is None:
                 pass
             else:
