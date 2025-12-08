@@ -37,7 +37,6 @@ class WeatherData:
     daily:        List[DailyForecast]  # count: 5
     units_temp:   str
     units_precip: str
-    
 
 WEATHER_CODES = {
     0 : "\x1b[38;2;255;220;100m☀ Sunny\x1b[0m",

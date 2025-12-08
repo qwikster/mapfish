@@ -29,3 +29,14 @@ better main menu
 note to self: brain hurty :thumbup:
 
 FIX: some condition codes are too long for daily
+
+main
+border
+coordinate
+time
+temp_high
+temp_low
+condition
+amount
+special
+error

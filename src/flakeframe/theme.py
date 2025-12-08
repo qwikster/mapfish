@@ -123,6 +123,7 @@ class ThemeUI:
     def __init__(self, handler: ThemeHandler):
         self.handler = handler
         self.current = handler.current
+        self.choice = 0
     
     def run_menu_old(self):
         while(True):
@@ -164,18 +165,45 @@ class ThemeUI:
             clear()
             width, height = get_terminal_size()
             
+            highlight = "---->"
+            
             box_h, box_w = 10, 32
-            box_x = (width - box_w) // 2
-            box_y = (height - box_h) // 2
+            x = (width - box_w) // 2
+            y = (height - box_h) // 2
             
             choices = []
             for th in self.handler.get_themes():
-                choices.append({
-                    "name": th.name,
-                    "col": th.assets,
-                })
+                choices.append( (th.name, th) )
             
-            action = read_key()
+            choices.append(("new"))
+            choices.append(("back"))
+            
+            sys.stdout.write(goto(x, y) + "╭" + "─" * box_w + "╮")
+            
+            i = 0
+            for ch in choices:
+                sys.stdout.write(goto(x, y + 1 + i) + "│" + display_center(ch[0], box_w) + "│")
+                i += 1
+                
             sys.stdout.flush()
+            input()
+            
+            key = read_key()
+            if key in ["up", "w"]:
+                self.choice = max(0, self.choice - 1)
+            elif key in ["down", "s"]:
+                self.choice = min(len(choices), self.choice + 1)
+            elif key in ["enter", "space"]:
+                if ch[0] == "back":
+                    return("quit")
+                elif ch[0] == "new":
+                    self.create_theme()
+                else:
+                    self.handler.load_theme(ch[1])
             
             # use theme.get("name") to look up an asset in a theme
+            
+            # TODO: finish implementing run menu w/ asset fetching,
+            
+    def create_theme(self):
+        pass # TODO: the uhhhhhhhh this

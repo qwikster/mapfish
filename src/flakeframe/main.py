@@ -1,6 +1,7 @@
 # Main entry point
 import json
 import os
+import sys
 from configparser import ConfigParser
 from flakeframe.ui import SettingsUI
 from flakeframe.mapview import MapViewUI
@@ -36,7 +37,14 @@ def entry():
             break
         elif result == "themes":
             themeui = ThemeUI(themes)
-            themeui.run_menu()
+            res = themeui.run_menu()
+            if res == "quit":
+                pass
+            elif res is None:
+                pass
+            else:
+                print("this shouldn't happen")
+                input()
             
         elif result and isinstance(result, tuple):
             lat, lon = result
@@ -45,4 +53,7 @@ def entry():
             mapview.run()
 
 if __name__ == "__main__":
-    entry()
+    try:
+        entry()
+    except KeyboardInterrupt:
+        sys.exit(0)

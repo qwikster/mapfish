@@ -34,9 +34,8 @@ def display_center(text: str, size: int):
 def get_terminal_size():
     return shutil.get_terminal_size((80, 24))
 
-def goto(x, y): # dont worry its not that goto
-    sys.stdout.write(f"\x1b[{y};{x}H")
-    sys.stdout.flush()
+def goto(x, y) -> str: # dont worry its not that goto
+    return f"\x1b[{y};{x}H"
 
 class SettingsUI:
     def __init__(self, config):
